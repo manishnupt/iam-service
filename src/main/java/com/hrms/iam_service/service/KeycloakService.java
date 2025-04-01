@@ -34,19 +34,22 @@ public class KeycloakService {
     @Value("${keycloak.endpoints.redirect-uri}")
     private String redirectUri;
 
-    private static final String TOKEN_URL = "http://localhost:8080/realms/master/protocol/openid-connect/token";
-    private static final String REALM_URL="http://localhost:8080/admin/realms";
-    private static final String CLIENT_CREATE_URL="http://localhost:8080/admin/realms/{realm}/clients";
-    private static final String ROLE_CREATE_URL="http://localhost:8080/admin/realms/{realm}/roles";
-    private static final String CREATE_GROUP="http://localhost:8080/admin/realms/{realm}/groups";
-    private static final String GET_REALM_ROLES="http://localhost:8080/admin/realms/{realm}/roles";
-    private static final String ASSIGN_GROUP_ROLES= "http://localhost:8080/admin/realms/{realm}/groups/{groupId}/role-mappings/realm";
-    private static final String CREATE_USER="http://localhost:8080/admin/realms/{realm}/users";
-    private static final String GET_CLIENTS="http://localhost:8080/admin/realms/{realm}/clients";
-    private static final String ASSIGN_USER_ROLES="http://localhost:8080/admin/realms/{realm}/users/{user}/role-mappings/clients/{client}";
-    private static final String GET_CLIENT_ROLES="http://localhost:8080/admin/realms/{realm}/clients/{client}/roles";
-    private static final String ASSIGN_GROUP_TO_USER="http://localhost:8080/admin/realms/{realm}/users/{userId}/groups/{groupId}";
-    private static final String VALIDATE_REALM="http://localhost:8080/admin/realms/{realm}";
+    @Value("${keycloak.endpoint}")
+    private String keycloakEndpoint;
+
+    private static final String TOKEN_URL = "realms/master/protocol/openid-connect/token";
+    private static final String REALM_URL="admin/realms";
+    private static final String CLIENT_CREATE_URL="admin/realms/{realm}/clients";
+    private static final String ROLE_CREATE_URL="admin/realms/{realm}/roles";
+    private static final String CREATE_GROUP="admin/realms/{realm}/groups";
+    private static final String GET_REALM_ROLES="admin/realms/{realm}/roles";
+    private static final String ASSIGN_GROUP_ROLES= "admin/realms/{realm}/groups/{groupId}/role-mappings/realm";
+    private static final String CREATE_USER="admin/realms/{realm}/users";
+    private static final String GET_CLIENTS="admin/realms/{realm}/clients";
+    private static final String ASSIGN_USER_ROLES="admin/realms/{realm}/users/{user}/role-mappings/clients/{client}";
+    private static final String GET_CLIENT_ROLES="admin/realms/{realm}/clients/{client}/roles";
+    private static final String ASSIGN_GROUP_TO_USER="admin/realms/{realm}/users/{userId}/groups/{groupId}";
+    private static final String VALIDATE_REALM="admin/realms/{realm}";
 
 
 
@@ -64,7 +67,7 @@ public class KeycloakService {
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-        ResponseEntity<Map> response = restTemplate.exchange(TOKEN_URL, HttpMethod.POST, requestEntity, Map.class);
+        ResponseEntity<Map> response = restTemplate.exchange(keycloakEndpoint+TOKEN_URL, HttpMethod.POST, requestEntity, Map.class);
 
         // Print response
         if (response.getStatusCode() == HttpStatus.OK) {
@@ -94,7 +97,7 @@ public class KeycloakService {
 
         try {
             // Call the Keycloak API
-            ResponseEntity<String> response = restTemplate.exchange(REALM_URL, HttpMethod.POST, requestEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(keycloakEndpoint+REALM_URL, HttpMethod.POST, requestEntity, String.class);
             return response.getBody();
         } catch (Exception e) {
             throw new RuntimeException("Failed to create realm: " + realmName, e);
@@ -122,7 +125,7 @@ public class KeycloakService {
         validateNotNull(adminToken, "adminToken");
         validateNotNull(realm, "realmName");
 
-        String url = CLIENT_CREATE_URL.replace("{realm}", realm);
+        String url = keycloakEndpoint+CLIENT_CREATE_URL.replace("{realm}", realm);
 
         // Create client details payload
         Map<String, Object> clientDetailsReq = new HashMap<>();
@@ -197,7 +200,7 @@ public class KeycloakService {
             rolePayload.put("description", "");  // Optional
             rolePayload.put("attributes", new HashMap<>()); // Empty attributes map
             HttpHeaders headers = createHeaders(token);
-            String url = ROLE_CREATE_URL.replace("{realm}", realmName);
+            String url = keycloakEndpoint+ROLE_CREATE_URL.replace("{realm}", realmName);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(rolePayload, headers);
 
@@ -216,7 +219,7 @@ public class KeycloakService {
     public String createGroup(String token,String groupName, String realm) {
         validateNotNull(realm,"realm");
         validateNotNull(groupName,"groupName");
-        String url = CREATE_GROUP.replace("{realm}", realm);
+        String url = keycloakEndpoint+CREATE_GROUP.replace("{realm}", realm);
 
         Map<String, Object> groupReq = new HashMap<>();
         groupReq.put("name", groupName);
@@ -250,7 +253,7 @@ public class KeycloakService {
     }
 
     public void assignRolesToGroup(String token, String groupId, List<String> roles, String realmName) {
-        String url = ASSIGN_GROUP_ROLES.replace("{realm}", realmName).replace("{groupId}",groupId);
+        String url = keycloakEndpoint+ASSIGN_GROUP_ROLES.replace("{realm}", realmName).replace("{groupId}",groupId);
         HttpHeaders headers = createHeaders(token);
         List<RealmRoleDetails> allRealmRoles = getAllRealmRoles(token, realmName).stream().filter(role->roles.contains(role.getName())).toList();
         HttpEntity<List<RealmRoleDetails>> requestEntity = new HttpEntity<>(allRealmRoles, headers);
@@ -262,7 +265,7 @@ public class KeycloakService {
     }
 
     public List<RealmRoleDetails> getAllRealmRoles(String token, String realmName){
-        String url = GET_REALM_ROLES.replace("{realm}", realmName);
+        String url = keycloakEndpoint+GET_REALM_ROLES.replace("{realm}", realmName);
         HttpHeaders headers = createHeaders(token);
         HttpEntity<String> requestEntity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
@@ -294,7 +297,7 @@ public class KeycloakService {
 
     public String createFirstUser(String token, KCOnboardUserRequest userRequest, String realmName) {
         validateNotNull(userRequest, "user provided");
-        String url = CREATE_USER.replace("{realm}", realmName);
+        String url = keycloakEndpoint+CREATE_USER.replace("{realm}", realmName);
         HttpHeaders headers = createHeaders(token);
         HttpEntity<KCOnboardUserRequest> request = new HttpEntity<>(userRequest, headers);
         ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, request, Void.class);
@@ -349,7 +352,7 @@ public class KeycloakService {
     }
 
     public List<Map> getClients(String token, String realmName) {
-        String getClientsUrl = GET_CLIENTS.replace("{realm}", realmName);
+        String getClientsUrl = keycloakEndpoint+GET_CLIENTS.replace("{realm}", realmName);
         HttpHeaders headers = createHeaders(token);
 
         ResponseEntity<Map[]> clientsResponse = restTemplate.exchange(
@@ -364,7 +367,7 @@ public class KeycloakService {
 
     public void assignClientRolesToUser(String token, String realmName, String userId, String clientId,
                                   List<Map<String, Object>> roles) {
-        String assignRoleUrl = ASSIGN_USER_ROLES.replace("{realm}", realmName)
+        String assignRoleUrl = keycloakEndpoint+ASSIGN_USER_ROLES.replace("{realm}", realmName)
                 .replace("{user}", userId).replace("{client}", clientId);
         HttpHeaders headers = createHeaders(token);
 
@@ -377,7 +380,7 @@ public class KeycloakService {
         }
     }
     public List<Map<String, Object>> getClientRoles(String token, String realmName, String clientId) {
-        String allClientRolesUrl = GET_CLIENT_ROLES.replace("{realm}", realmName)
+        String allClientRolesUrl = keycloakEndpoint+GET_CLIENT_ROLES.replace("{realm}", realmName)
                 .replace("{client}", clientId);
         HttpHeaders headers = createHeaders(token);
 
@@ -395,7 +398,7 @@ public class KeycloakService {
         try {
             HttpHeaders headers = createHeaders(token);
             HttpEntity<String> request = new HttpEntity<>(headers);
-            String assignGroupUrl = ASSIGN_GROUP_TO_USER.replace("{realm}", realm)
+            String assignGroupUrl = keycloakEndpoint+ASSIGN_GROUP_TO_USER.replace("{realm}", realm)
                                 .replace("{userId}", userId).replace("{groupId}", groupId);
             restTemplate.exchange(assignGroupUrl, HttpMethod.PUT, request, Void.class);
         } catch (Exception e) {
@@ -406,11 +409,11 @@ public class KeycloakService {
 
     public KCTenantInfoResponse validateTenant(String token, @NotBlank String tenantName) {
         HttpHeaders headers = createHeaders(token);
-        String url = VALIDATE_REALM.replace("{realm}", tenantName);
+        String url = keycloakEndpoint+VALIDATE_REALM.replace("{realm}", tenantName);
         HttpEntity<String> requestEntity = new HttpEntity<>(headers);
         try {
             restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
-            String redirectURI = String.format(Constants.TENANT_REDIRECT_URI, "http://localhost:8080/",tenantName,
+            String redirectURI = String.format(Constants.TENANT_REDIRECT_URI,keycloakEndpoint ,tenantName,
                     Constants.TENANT_CLIENT_ID, redirectUri.replace("{realm}",tenantName));
 
             KCTenantInfoResponse response = KCTenantInfoResponse.builder()
