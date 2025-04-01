@@ -37,7 +37,7 @@ public class KeycloakService {
     @Value("${keycloak.endpoint}")
     private String keycloakEndpoint;
 
-    private static final String TOKEN_URL = "realms/master/protocol/openid-connect/token";
+    private static final String TOKEN_URL = "auth/realms/master/protocol/openid-connect/token";
     private static final String REALM_URL="admin/realms";
     private static final String CLIENT_CREATE_URL="admin/realms/{realm}/clients";
     private static final String ROLE_CREATE_URL="admin/realms/{realm}/roles";
