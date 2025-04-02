@@ -37,19 +37,19 @@ public class KeycloakService {
     @Value("${keycloak.endpoint}")
     private String keycloakEndpoint;
 
-    private static final String TOKEN_URL = "auth/realms/master/protocol/openid-connect/token";
-    private static final String REALM_URL="auth/admin/realms";
-    private static final String CLIENT_CREATE_URL="auth/admin/realms/{realm}/clients";
-    private static final String ROLE_CREATE_URL="auth/admin/realms/{realm}/roles";
-    private static final String CREATE_GROUP="auth/admin/realms/{realm}/groups";
-    private static final String GET_REALM_ROLES="auth/admin/realms/{realm}/roles";
-    private static final String ASSIGN_GROUP_ROLES= "auth/admin/realms/{realm}/groups/{groupId}/role-mappings/realm";
-    private static final String CREATE_USER="auth/admin/realms/{realm}/users";
-    private static final String GET_CLIENTS="auth/admin/realms/{realm}/clients";
-    private static final String ASSIGN_USER_ROLES="auth/admin/realms/{realm}/users/{user}/role-mappings/clients/{client}";
-    private static final String GET_CLIENT_ROLES="auth/admin/realms/{realm}/clients/{client}/roles";
-    private static final String ASSIGN_GROUP_TO_USER="auth/admin/realms/{realm}/users/{userId}/groups/{groupId}";
-    private static final String VALIDATE_REALM="auth/admin/realms/{realm}";
+    private static final String TOKEN_URL = "realms/master/protocol/openid-connect/token";
+    private static final String REALM_URL="admin/realms";
+    private static final String CLIENT_CREATE_URL="admin/realms/{realm}/clients";
+    private static final String ROLE_CREATE_URL="admin/realms/{realm}/roles";
+    private static final String CREATE_GROUP="admin/realms/{realm}/groups";
+    private static final String GET_REALM_ROLES="admin/realms/{realm}/roles";
+    private static final String ASSIGN_GROUP_ROLES= "admin/realms/{realm}/groups/{groupId}/role-mappings/realm";
+    private static final String CREATE_USER="admin/realms/{realm}/users";
+    private static final String GET_CLIENTS="admin/realms/{realm}/clients";
+    private static final String ASSIGN_USER_ROLES="admin/realms/{realm}/users/{user}/role-mappings/clients/{client}";
+    private static final String GET_CLIENT_ROLES="admin/realms/{realm}/clients/{client}/roles";
+    private static final String ASSIGN_GROUP_TO_USER="admin/realms/{realm}/users/{userId}/groups/{groupId}";
+    private static final String VALIDATE_REALM="admin/realms/{realm}";
 
 
 
