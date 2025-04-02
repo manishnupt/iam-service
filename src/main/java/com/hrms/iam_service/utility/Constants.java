@@ -25,7 +25,7 @@ public class Constants {
 
     public static final String CLIENT_ID_ADMIN_USERNAME = "admin";
 
-    public static final String CLIENT_ID_ADMIN_PASSWORD = "admin";
+    public static final String CLIENT_ID_ADMIN_PASSWORD = "admin123";
 
     public static final String TENANT_REDIRECT_URI = "%srealms/%s/protocol/openid-connect/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=openid";
 
