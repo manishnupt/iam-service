@@ -66,18 +66,19 @@ public class KeycloakService {
         requestBody.add("grant_type", "password");
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
-
-        ResponseEntity<Map> response = restTemplate.exchange(keycloakEndpoint+TOKEN_URL, HttpMethod.POST, requestEntity, Map.class);
-
-        // Print response
-        if (response.getStatusCode() == HttpStatus.OK) {
-            System.out.println("Access Token: " + response.getBody().get("access_token"));
-            return response.getBody().get("access_token").toString();
-        } else {
-            throw new RuntimeException("error");
-            //System.out.println("Failed to fetch token. Status: " + response.getStatusCode());
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(keycloakEndpoint + TOKEN_URL, HttpMethod.POST, requestEntity, Map.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                System.out.println("Access Token: " + response.getBody().get("access_token"));
+                return response.getBody().get("access_token").toString();
+            } else {
+                throw new RuntimeException("error");
+                //System.out.println("Failed to fetch token. Status: " + response.getStatusCode());
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
-
+        return null;
     }
 
     public String createRealm(String token, String realmName) {
