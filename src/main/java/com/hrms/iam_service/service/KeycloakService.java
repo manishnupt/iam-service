@@ -60,7 +60,7 @@ public class KeycloakService {
 
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
         requestBody.add("client_id", request.getClientId());
-        requestBody.add("client_secret", request.getClientSecret());
+        //requestBody.add("client_secret", request.getClientSecret());
         requestBody.add("username", request.getUsername());
         requestBody.add("password", request.getPassword());
         requestBody.add("grant_type", "password");
