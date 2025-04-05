@@ -3,11 +3,14 @@ package com.hrms.iam_service.controller;
 import com.hrms.iam_service.dto.*;
 import com.hrms.iam_service.response.HttpDataResponse;
 import com.hrms.iam_service.response.KCCreateClientResponse;
+import com.hrms.iam_service.response.KCRealmAccessTokenResponse;
 import com.hrms.iam_service.response.KCTenantInfoResponse;
 import com.hrms.iam_service.service.KeycloakService;
 import com.hrms.iam_service.utility.Constants;
 import com.hrms.iam_service.utility.HttpDataResponseUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/iamcontroller")
 @CrossOrigin(origins="*")
+@Log4j2
 public class IamController {
 
 
@@ -172,6 +176,16 @@ public class IamController {
         return ResponseEntity.ok().body(httpResponse);
 
     }
+    @PostMapping("/validate-authcode")
+    public ResponseEntity<?> validateAuthCodeAndSetTokenAsCookies(
+            @Valid @RequestBody KCRealmAccessTokenRequest request) {
+
+        log.info("Auth code validation started: {}", "inside /validate-authcode epts");
+        KCRealmAccessTokenResponse kcRealmAccessTokenResponse = keyCloakService.validateAuthCode(request);
+        log.info("Successfully completed the request, response sent");
+        return ResponseEntity.status(HttpStatus.CREATED).body(kcRealmAccessTokenResponse);
+    }
+
 
 
 }

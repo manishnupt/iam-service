@@ -6,10 +6,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrms.iam_service.dto.KCAdminAccessTokenRequest;
 import com.hrms.iam_service.dto.KCOnboardUserRequest;
+import com.hrms.iam_service.dto.KCRealmAccessTokenRequest;
 import com.hrms.iam_service.dto.RealmRoleDetails;
 import com.hrms.iam_service.response.KCCreateClientResponse;
+import com.hrms.iam_service.response.KCRealmAccessTokenResponse;
 import com.hrms.iam_service.response.KCTenantInfoResponse;
+import com.hrms.iam_service.response.KeycloakConfigResponse;
 import com.hrms.iam_service.utility.Constants;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +42,9 @@ public class KeycloakService {
     @Value("${keycloak.endpoint}")
     private String keycloakEndpoint;
 
+    @Value("${tenant-management.endpoint}")
+    private String tenantManagementEndpoint;
+
     private static final String TOKEN_URL = "realms/master/protocol/openid-connect/token";
     private static final String REALM_URL="admin/realms";
     private static final String CLIENT_CREATE_URL="admin/realms/{realm}/clients";
@@ -50,6 +58,9 @@ public class KeycloakService {
     private static final String GET_CLIENT_ROLES="admin/realms/{realm}/clients/{client}/roles";
     private static final String ASSIGN_GROUP_TO_USER="admin/realms/{realm}/users/{userId}/groups/{groupId}";
     private static final String VALIDATE_REALM="admin/realms/{realm}";
+    private static final String REALM_TOKEN_URL = "realms/{realm}/protocol/openid-connect/token";
+
+    private static final String TENANT_KC_CONFIG="/api/v1/tenants/auth-config/{realm}";
 
 
 
@@ -427,5 +438,53 @@ public class KeycloakService {
         catch(Exception e){
             throw new InputMismatchException("No tenant found with this name");
         }
+    }
+
+    public KCRealmAccessTokenResponse validateAuthCode(@Valid KCRealmAccessTokenRequest request) {
+        KeycloakConfigResponse tenantKeyCloakConfig = getTenantKeyCloakConfig(request.getTenantName(), request.getAuthCode());
+        return getRealmAccessToken(request, tenantKeyCloakConfig);
+    }
+
+    private KCRealmAccessTokenResponse getRealmAccessToken(@Valid KCRealmAccessTokenRequest req, KeycloakConfigResponse tenantKeyCloakConfig) {
+        String realm = req.getTenantName();
+        String url = keycloakEndpoint+REALM_TOKEN_URL.replace("{realm}", realm);
+
+        // Prepare form params
+        MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
+        formParams.add("grant_type", "authorization_code");
+        formParams.add("code", req.getAuthCode());
+        formParams.add("redirect_uri", redirectUri.replace("{realm}",realm));
+        formParams.add("client_id", tenantKeyCloakConfig.getData().getClientId());
+        formParams.add("client_secret", tenantKeyCloakConfig.getData().getClientSecret());
+
+        // Prepare headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        // Combine headers and body
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formParams, headers);
+
+        // Send request
+        ResponseEntity<KCRealmAccessTokenResponse> response = restTemplate.postForEntity(
+                url,
+                request,
+                KCRealmAccessTokenResponse.class
+        );
+
+        return response.getBody();
+    }
+
+    private KeycloakConfigResponse getTenantKeyCloakConfig(String tenantName, String authCode) {
+        String url = tenantManagementEndpoint+TENANT_KC_CONFIG.replace("{realm}", tenantName);
+        ResponseEntity<KeycloakConfigResponse> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {},
+                tenantName
+        );
+
+        return response.getBody();
+
     }
 }
