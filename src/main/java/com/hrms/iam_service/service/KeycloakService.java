@@ -13,7 +13,6 @@ import com.hrms.iam_service.response.KCRealmAccessTokenResponse;
 import com.hrms.iam_service.response.KCTenantInfoResponse;
 import com.hrms.iam_service.response.KeycloakConfigResponse;
 import com.hrms.iam_service.utility.Constants;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -307,7 +306,7 @@ public class KeycloakService {
     }
 
 
-    public String createFirstUser(String token, KCOnboardUserRequest userRequest, String realmName) {
+    public String createUser(String token, KCOnboardUserRequest userRequest, String realmName) {
         validateNotNull(userRequest, "user provided");
         String url = keycloakEndpoint+CREATE_USER.replace("{realm}", realmName);
         HttpHeaders headers = createHeaders(token);

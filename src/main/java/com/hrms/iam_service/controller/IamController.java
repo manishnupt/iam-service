@@ -8,7 +8,6 @@ import com.hrms.iam_service.response.KCTenantInfoResponse;
 import com.hrms.iam_service.service.KeycloakService;
 import com.hrms.iam_service.utility.Constants;
 import com.hrms.iam_service.utility.HttpDataResponseUtil;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -136,7 +135,7 @@ public class IamController {
                     .enabled(true)
                     .build();
 
-            String userId = keyCloakService.createFirstUser(token, kcOnboardUserRequest, userRequest.getRealmName());
+            String userId = keyCloakService.createUser(token, kcOnboardUserRequest, userRequest.getRealmName());
             Map<String, String> userResponse = new HashMap<>();
             userResponse.put("userId", userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
@@ -184,6 +183,36 @@ public class IamController {
         KCRealmAccessTokenResponse kcRealmAccessTokenResponse = keyCloakService.validateAuthCode(request);
         log.info("Successfully completed the request, response sent");
         return ResponseEntity.status(HttpStatus.CREATED).body(kcRealmAccessTokenResponse);
+    }
+
+
+
+    @PostMapping("/onboard-kc-user")
+    public ResponseEntity<?> createUser(
+            @RequestHeader("Authorization") String token,
+            @RequestBody KCFirstUserRequest userRequest) {
+        try {
+            List<KCOnboardUserRequest.Credential> credential = List.of(KCOnboardUserRequest.Credential.builder()
+                    .type("password")
+                    .value(userRequest.getPassword())
+                    .temporary(userRequest.isTemporaryPassword())
+                    .build());
+
+            KCOnboardUserRequest kcOnboardUserRequest = KCOnboardUserRequest.builder()
+                    .email(userRequest.getEmail())
+                    .username(userRequest.getUserName())
+                    .credentials(credential)
+                    .enabled(true)
+                    .build();
+
+            String userId = keyCloakService.createUser(token, kcOnboardUserRequest, userRequest.getRealmName());
+            Map<String, String> userResponse = new HashMap<>();
+            userResponse.put("userId", userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 

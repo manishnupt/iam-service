@@ -15,5 +15,5 @@ public class KCFirstUserRequest {
     private String email;
     private String password;
     private String realmName;
-
+    private boolean temporaryPassword;
 }
