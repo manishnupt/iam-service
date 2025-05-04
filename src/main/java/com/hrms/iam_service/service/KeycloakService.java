@@ -15,6 +15,7 @@ import com.hrms.iam_service.response.KeycloakConfigResponse;
 import com.hrms.iam_service.utility.Constants;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -29,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@Log4j2
 public class KeycloakService {
 
     @Autowired
@@ -311,11 +313,12 @@ public class KeycloakService {
         String url = keycloakEndpoint+CREATE_USER.replace("{realm}", realmName);
         HttpHeaders headers = createHeaders(token);
         HttpEntity<KCOnboardUserRequest> request = new HttpEntity<>(userRequest, headers);
+        log.info("Request log:{}",userRequest);
         ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, request, Void.class);
         if (response.getStatusCode() == HttpStatus.CREATED) {
             return extractIdFromPath(Constants.EXTRACT_USER_ID_REGEX,response.getHeaders().getLocation().toString());
         } else {
-            throw new RuntimeException("Failed to create user: " + response.getStatusCode());
+            throw new RuntimeException("Failed to create user: " + response.getStatusCode() );
         }
     }
 
