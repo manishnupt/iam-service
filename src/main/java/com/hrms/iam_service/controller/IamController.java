@@ -11,13 +11,19 @@ import com.hrms.iam_service.utility.HttpDataResponseUtil;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
+
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/iamcontroller")
@@ -31,6 +37,9 @@ public class IamController {
 
     @Autowired
     private HttpDataResponseUtil httpDataResponseUtil;
+    
+    @Value("${keycloak.endpoint}")
+    private String keycloakBaseUrl;
 
 
     @PostMapping("/keycloak-token")
@@ -213,6 +222,20 @@ public class IamController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+     
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request,
+                                       HttpServletResponse response) {
+        String realm =request.getHeader("X-Tenant-Id");
+        String redirectUri = "https://demo.pp.hrms.work/tenant-login";
+        String logoutUrl = keycloakBaseUrl + "realms/" + realm +
+                "/protocol/openid-connect/logout?redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8);
+
+        // return 302 to UI → browser follows to Keycloak
+        response.setHeader("Location", logoutUrl);
+        response.setStatus(HttpServletResponse.SC_FOUND);
+        return ResponseEntity.status(HttpStatus.FOUND).build();
     }
 
 
