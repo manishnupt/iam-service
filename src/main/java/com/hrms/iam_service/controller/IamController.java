@@ -230,7 +230,7 @@ public class IamController {
         String realm =request.getHeader("X-Tenant-Id");
         String redirectUri = "https://demo.pp.hrms.work/tenant-login";
         String logoutUrl = keycloakBaseUrl + "realms/" + realm +
-                "/protocol/openid-connect/logout?redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8);
+                "/protocol/openid-connect/logout?post_logout_redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8);
 
         // return 302 to UI → browser follows to Keycloak
         response.setHeader("Location", logoutUrl);
