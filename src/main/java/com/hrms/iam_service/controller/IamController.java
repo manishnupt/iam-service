@@ -235,7 +235,8 @@ public class IamController {
         String logoutUrl = keycloakBaseUrl + "realms/" + realm +
             "/protocol/openid-connect/logout?id_token_hint=" + idToken +
             "&post_logout_redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8);
-
+            
+        log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
 
         // return 302 to UI → browser follows to Keycloak
         response.setHeader("Location", logoutUrl);
