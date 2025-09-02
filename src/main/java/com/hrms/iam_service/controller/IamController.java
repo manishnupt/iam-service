@@ -225,15 +225,16 @@ public class IamController {
     }
      
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request,
+    public ResponseEntity<Void> logout(@RequestParam String token,
+                                       HttpServletRequest request,
                                        HttpServletResponse response) {
         String realm =request.getHeader("X-Tenant-Id");
         String redirectUri = "https://demo.pp.hrms.work/tenant-login";
                 
-        String idToken = request.getHeader("Authorization").replace("Bearer ", ""); // or however you stored it
+
 
         String logoutUrl = keycloakBaseUrl + "realms/" + realm +
-            "/protocol/openid-connect/logout?id_token_hint=" + idToken +
+            "/protocol/openid-connect/logout?id_token_hint=" + token +
             "&post_logout_redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8);
             
         log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
