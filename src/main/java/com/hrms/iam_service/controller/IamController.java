@@ -229,20 +229,12 @@ public class IamController {
                                        HttpServletRequest request,
                                        HttpServletResponse response) {
         String realm =request.getHeader("X-Tenant-Id");
+
+        keyCloakService.logoutUser(token, realm);
         String redirectUri = "https://demo.pp.hrms.work/tenant-login";
-                
-
-
-        String logoutUrl = keycloakBaseUrl + "realms/" + realm +
-            "/protocol/openid-connect/logout?id_token_hint=" + token +
-            "&post_logout_redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8);
-            
-        log.info("Redirecting to Keycloak logout URL: {}", logoutUrl);
-
-        // return 302 to UI → browser follows to Keycloak
-        response.setHeader("Location", logoutUrl);
-        response.setStatus(HttpServletResponse.SC_FOUND);
-        return ResponseEntity.status(HttpStatus.FOUND).build();
+        return ResponseEntity.status(HttpStatus.FOUND) // 302
+                .header("Location", redirectUri)
+                .build();
     }
 
 
