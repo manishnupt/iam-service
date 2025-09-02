@@ -490,4 +490,22 @@ public class KeycloakService {
         return response.getBody();
 
     }
+
+    public void logoutUser(String token, String realm) {
+        KeycloakConfigResponse tenantKeyCloakConfig = getTenantKeyCloakConfig(realm, null);
+        String logoutUrl = keycloakEndpoint + "realms/" + realm + "/protocol/openid-connect/logout";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("client_id", tenantKeyCloakConfig.getData().getClientId());
+        form.add("client_secret", tenantKeyCloakConfig.getData().getClientSecret());
+        form.add("refresh_token", token); // refresh token you currently store
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
+
+        ResponseEntity<String> kcResponse = restTemplate.postForEntity(logoutUrl, entity, String.class);
+        log.info("Keycloak logout response: {}", kcResponse.getStatusCode());
+    }
 }
