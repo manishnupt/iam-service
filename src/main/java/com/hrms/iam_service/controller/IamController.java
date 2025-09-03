@@ -223,18 +223,20 @@ public class IamController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-     
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestParam String token,
-                                       HttpServletRequest request,
-                                       HttpServletResponse response) {
-        String realm =request.getHeader("X-Tenant-Id");
 
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@RequestParam String token,
+                                                      HttpServletRequest request) {
+        String realm = request.getHeader("X-Tenant-Id");
         keyCloakService.logoutUser(token, realm);
         String redirectUri = "https://demo.pp.hrms.work/tenant-login";
-        return ResponseEntity.status(HttpStatus.FOUND) // 302
-                .header("Location", redirectUri)
-                .build();
+
+        Map<String, String> body = new HashMap<>();
+        body.put("redirectUri",redirectUri);
+        body.put("message", "Logged out successfully");
+
+        return ResponseEntity.ok(body);
     }
 
 
