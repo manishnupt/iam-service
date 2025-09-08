@@ -1,0 +1,45 @@
+global: {}
+fullnameOverride: ""
+ServiceAccount:
+  automountServiceAccountToken: true
+  name: iam-service-mgmt
+Deployment:
+  name: iam-service-mgmt
+  annotations:
+    instrumentation.opentelemetry.io/inject-java: "trace/default"
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  containers:
+    iam-service-mgmt:
+      image:
+        registry: "742428948447.dkr.ecr.ap-south-1.amazonaws.com"
+        repository: "mynx-use1-hrms-stage-iam-service-ecr"
+        tag: "v1"
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 7077
+          protocol: TCP
+          name: http
+      resources:
+        limits:
+          cpu: "2"
+          memory: "4Gi"
+        requests:
+          cpu: "1"
+          memory: "2Gi"
+      env:
+        SPRING_APPLICATION_NAME: "iam-service"
+        KEYCLOAK_ENDPOINT: "https://localhost:8080/"
+        TENANT_SERVICE_ENDPOINT: "http://tenant-mgmt.tenant-mgmt.svc.cluster.local:80"
+        REDIRECT_URI: "https://{realm}.dev.hrms.work/oidc/redirect"
+Service:
+  iam-service-mgmt:
+    name: iam-service-mgmt
+    ports:
+      - port: 80
+        targetPort: 7077
+    sessionAffinity: None
