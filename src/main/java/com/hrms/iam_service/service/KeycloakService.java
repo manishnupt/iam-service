@@ -76,6 +76,7 @@ public class KeycloakService {
         requestBody.add("username", request.getUsername());
         requestBody.add("password", request.getPassword());
         requestBody.add("grant_type", "password");
+        log.info("this is a request to generate the admin token :{}",requestBody);
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
         try {
