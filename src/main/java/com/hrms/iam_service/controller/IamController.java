@@ -253,6 +253,20 @@ public class IamController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @DeleteMapping("/remove-group-roles")
+    public ResponseEntity<?> removeGroupRoles(@RequestHeader("Authorization") String token,
+                                              @RequestParam(required = true) String realmName,
+                                              @RequestParam(required = true) String groupId,
+                                              @RequestBody List<Long> roles) {
+        try {
+            keyCloakService.removeRolesFromGroup(token, groupId, roles, realmName);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     
 
 }

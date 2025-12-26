@@ -69,6 +69,7 @@ public class KeycloakService {
 
 
 
+
     public String getAdminAccessToken(KCAdminAccessTokenRequest request) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -523,6 +524,19 @@ public class KeycloakService {
             restTemplate.exchange(removeGroupUrl, HttpMethod.DELETE, request, Void.class);
         } catch (Exception e) {
             throw new RuntimeException("Error while removing user from group: " + e.getMessage(), e);
+        }
+    }
+
+    public void removeRolesFromGroup(String token, String groupId, List<Long> roles, String realmName) {
+        String url = keycloakEndpoint+ASSIGN_GROUP_ROLES.replace("{realm}", realmName).replace("{groupId}",groupId);
+        HttpHeaders headers = createHeaders(token);
+        List<RealmRoleDetails> allRealmRoles = getAllRealmRoles(token, realmName).stream()
+                .filter(role->roles.contains(Long.parseLong(role.getId()))).toList();
+        HttpEntity<List<RealmRoleDetails>> requestEntity = new HttpEntity<>(allRealmRoles, headers);
+        try {
+            restTemplate.exchange(url, HttpMethod.DELETE, requestEntity, String.class);
+        }catch (Exception ex){
+            throw new RuntimeException("Error fetching roles from realm in keycloak " );
         }
     }
 }
