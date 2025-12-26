@@ -1,4 +1,4 @@
-package com.hrms.iam_service;
+package com.hrms.iam_service.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

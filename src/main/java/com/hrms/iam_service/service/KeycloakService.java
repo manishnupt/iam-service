@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.impl.BeanPropertyMap;
 import com.hrms.iam_service.dto.KCAdminAccessTokenRequest;
 import com.hrms.iam_service.dto.KCOnboardUserRequest;
 import com.hrms.iam_service.dto.KCRealmAccessTokenRequest;
@@ -62,6 +63,9 @@ public class KeycloakService {
     private static final String REALM_TOKEN_URL = "realms/{realm}/protocol/openid-connect/token";
 
     private static final String TENANT_KC_CONFIG="/api/v1/tenants/auth-config/{realm}";
+
+    private static final String UNASSIGN_GROUP_FROM_USER = "admin/realms/{realm}/users/{userId}/groups/{groupId}";
+
 
 
 
@@ -508,5 +512,17 @@ public class KeycloakService {
 
         ResponseEntity<String> kcResponse = restTemplate.postForEntity(logoutUrl, entity, String.class);
         log.info("Keycloak logout response: {}", kcResponse.getStatusCode());
+    }
+
+    public void removeGroupAccess(String token, String realmName, String userId, String groupId) {
+        try {
+            HttpHeaders headers = createHeaders(token);
+            HttpEntity<String> request = new HttpEntity<>(headers);
+            String removeGroupUrl = keycloakEndpoint+UNASSIGN_GROUP_FROM_USER.replace("{realm}", realmName)
+                    .replace("{userId}", userId).replace("{groupId}", groupId);
+            restTemplate.exchange(removeGroupUrl, HttpMethod.DELETE, request, Void.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while removing user from group: " + e.getMessage(), e);
+        }
     }
 }

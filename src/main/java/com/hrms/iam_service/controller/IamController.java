@@ -238,6 +238,21 @@ public class IamController {
 
         return ResponseEntity.ok(body);
     }
+
+    @PostMapping("/remove-group-access")
+    public ResponseEntity<?> removeGroupAccess(@RequestHeader("Authorization") String token,
+                                              @RequestParam(required = true) String realmName,
+                                               @RequestParam(required = true) String userId,
+                                              @RequestParam String groupId) {
+        try {
+            keyCloakService.removeGroupAccess(token, realmName, userId,groupId);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+           // HttpExceptionResponse response = httpExceptionResponseUtil.internalServerError(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     
 
 }
