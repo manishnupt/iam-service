@@ -239,7 +239,7 @@ public class IamController {
         return ResponseEntity.ok(body);
     }
 
-    @PostMapping("/remove-group-access")
+    @DeleteMapping("/remove-group-access")
     public ResponseEntity<?> removeGroupAccess(@RequestHeader("Authorization") String token,
                                               @RequestParam(required = true) String realmName,
                                                @RequestParam(required = true) String userId,
