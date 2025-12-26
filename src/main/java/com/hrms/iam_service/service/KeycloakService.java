@@ -527,11 +527,13 @@ public class KeycloakService {
         }
     }
 
-    public void removeRolesFromGroup(String token, String groupId, List<Long> roles, String realmName) {
+    public void removeRolesFromGroup(String token, String groupId, List<UUID> roles, String realmName) {
         String url = keycloakEndpoint+ASSIGN_GROUP_ROLES.replace("{realm}", realmName).replace("{groupId}",groupId);
         HttpHeaders headers = createHeaders(token);
-        List<RealmRoleDetails> allRealmRoles = getAllRealmRoles(token, realmName).stream()
-                .filter(role->roles.contains(Long.parseLong(role.getId()))).toList();
+        List<RealmRoleDetails> allRealmRoles =
+                getAllRealmRoles(token, realmName).stream()
+                        .filter(role -> roles.contains(UUID.fromString(role.getId())))
+                        .toList();
         HttpEntity<List<RealmRoleDetails>> requestEntity = new HttpEntity<>(allRealmRoles, headers);
         try {
             restTemplate.exchange(url, HttpMethod.DELETE, requestEntity, String.class);

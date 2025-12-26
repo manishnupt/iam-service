@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/iamcontroller")
@@ -258,7 +259,7 @@ public class IamController {
     public ResponseEntity<?> removeGroupRoles(@RequestHeader("Authorization") String token,
                                               @RequestParam(required = true) String realmName,
                                               @RequestParam(required = true) String groupId,
-                                              @RequestBody List<Long> roles) {
+                                              @RequestBody List<UUID> roles) {
         try {
             keyCloakService.removeRolesFromGroup(token, groupId, roles, realmName);
             return ResponseEntity.status(HttpStatus.OK).build();
