@@ -259,7 +259,7 @@ public class IamController {
     public ResponseEntity<?> removeGroupRoles(@RequestHeader("Authorization") String token,
                                               @RequestParam(required = true) String realmName,
                                               @RequestParam(required = true) String groupId,
-                                              @RequestBody List<UUID> roles) {
+                                              @RequestBody List<String> roles) {
         try {
             keyCloakService.removeRolesFromGroup(token, groupId, roles, realmName);
             return ResponseEntity.status(HttpStatus.OK).build();
