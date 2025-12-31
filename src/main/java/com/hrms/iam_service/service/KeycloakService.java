@@ -5,10 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.impl.BeanPropertyMap;
-import com.hrms.iam_service.dto.KCAdminAccessTokenRequest;
-import com.hrms.iam_service.dto.KCOnboardUserRequest;
-import com.hrms.iam_service.dto.KCRealmAccessTokenRequest;
-import com.hrms.iam_service.dto.RealmRoleDetails;
+import com.hrms.iam_service.dto.*;
 import com.hrms.iam_service.response.KCCreateClientResponse;
 import com.hrms.iam_service.response.KCRealmAccessTokenResponse;
 import com.hrms.iam_service.response.KCTenantInfoResponse;
@@ -539,6 +536,35 @@ public class KeycloakService {
             restTemplate.exchange(url, HttpMethod.DELETE, requestEntity, String.class);
         }catch (Exception ex){
             throw new RuntimeException("Error fetching roles from realm in keycloak " );
+        }
+    }
+
+    public TokenResponse refreshToken(String refreshToken, String tenantId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", Constants.TENANT_CLIENT_ID);
+        requestBody.add("grant_type", "refresh_token");
+        requestBody.add("refresh_token", refreshToken);
+
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        try {
+            ResponseEntity<TokenResponse> response = restTemplate.exchange(
+                    keycloakEndpoint + keycloakEndpoint+REALM_TOKEN_URL.replace("{realm}", tenantId),
+                    HttpMethod.POST,
+                    requestEntity,
+                    TokenResponse.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return response.getBody();
+            } else {
+                throw new RuntimeException("Failed to refresh token. Status: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error refreshing token: " + e.getMessage(), e);
         }
     }
 }
