@@ -552,7 +552,7 @@ public class KeycloakService {
 
         try {
             ResponseEntity<TokenResponse> response = restTemplate.exchange(
-                    keycloakEndpoint + keycloakEndpoint+REALM_TOKEN_URL.replace("{realm}", tenantId),
+                    keycloakEndpoint +REALM_TOKEN_URL.replace("{realm}", tenantId),
                     HttpMethod.POST,
                     requestEntity,
                     TokenResponse.class
