@@ -447,7 +447,7 @@ public class KeycloakService {
     }
 
     public KCRealmAccessTokenResponse validateAuthCode(@Valid KCRealmAccessTokenRequest request) {
-        KeycloakConfigResponse tenantKeyCloakConfig = getTenantKeyCloakConfig(request.getTenantName(), request.getAuthCode());
+        KeycloakConfigResponse tenantKeyCloakConfig = getTenantKeyCloakConfig(request.getTenantName());
         return getRealmAccessToken(request, tenantKeyCloakConfig);
     }
 
@@ -480,7 +480,7 @@ public class KeycloakService {
         return response.getBody();
     }
 
-    private KeycloakConfigResponse getTenantKeyCloakConfig(String tenantName, String authCode) {
+    private KeycloakConfigResponse getTenantKeyCloakConfig(String tenantName) {
         String url = tenantManagementEndpoint+TENANT_KC_CONFIG.replace("{realm}", tenantName);
         ResponseEntity<KeycloakConfigResponse> response = restTemplate.exchange(
                 url,
@@ -495,7 +495,7 @@ public class KeycloakService {
     }
 
     public void logoutUser(String token, String realm) {
-        KeycloakConfigResponse tenantKeyCloakConfig = getTenantKeyCloakConfig(realm, null);
+        KeycloakConfigResponse tenantKeyCloakConfig = getTenantKeyCloakConfig(realm);
         String logoutUrl = keycloakEndpoint + "realms/" + realm + "/protocol/openid-connect/logout";
 
         HttpHeaders headers = new HttpHeaders();
@@ -540,6 +540,9 @@ public class KeycloakService {
     }
 
     public TokenResponse refreshToken(String refreshToken, String tenantId) {
+
+        KeycloakConfigResponse tenantKeyCloakConfig = getTenantKeyCloakConfig(tenantId);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -547,6 +550,7 @@ public class KeycloakService {
         requestBody.add("client_id", Constants.TENANT_CLIENT_ID);
         requestBody.add("grant_type", "refresh_token");
         requestBody.add("refresh_token", refreshToken);
+        requestBody.add("client_secret", tenantKeyCloakConfig.getData().getClientSecret());
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
