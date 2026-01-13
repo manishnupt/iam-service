@@ -571,4 +571,19 @@ public class KeycloakService {
             throw new RuntimeException("Error refreshing token: " + e.getMessage(), e);
         }
     }
+
+    public void updateGroupName(String token, String groupId, String newGroupName, String realmName) {
+        String url = keycloakEndpoint+CREATE_GROUP.replace("{realm}", realmName)+"/"+groupId;
+
+        Map<String, Object> groupReq = new HashMap<>();
+        groupReq.put("name", newGroupName);
+        HttpHeaders headers = createHeaders(token);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(groupReq, headers);
+        try {
+            // Send PUT request
+            restTemplate.put(url, request);
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating group in Keycloak: " + e.getMessage(), e);
+        }
+    }
 }

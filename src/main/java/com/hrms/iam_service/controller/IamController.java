@@ -268,6 +268,20 @@ public class IamController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @PutMapping("/update-group-name")
+    public ResponseEntity<String> updateGroupName(@RequestParam String groupId,
+                                                  @RequestParam String newGroupName,
+                                                  @RequestParam String realmName,
+                                                  @RequestHeader("Authorization") String token) {
+        try {
+            keyCloakService.updateGroupName(token, groupId, newGroupName, realmName);
+            return ResponseEntity.status(HttpStatus.OK).body("Group name updated successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating group name");
+        }
+    }
     
 
 }
