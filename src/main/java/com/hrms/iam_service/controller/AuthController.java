@@ -28,8 +28,6 @@ public class AuthController {
     public ResponseEntity<TokenResponse> refreshToken(
             @Valid @RequestBody TokenRequest request
                     ,@RequestHeader("X-Tenant-Id") String tenantId) {
-
-
         try {
             TokenResponse response = keycloakService.refreshToken(
                     request.getRefreshToken(),tenantId
