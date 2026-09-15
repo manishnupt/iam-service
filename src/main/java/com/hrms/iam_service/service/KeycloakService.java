@@ -431,8 +431,9 @@ public class KeycloakService {
         HttpEntity<String> requestEntity = new HttpEntity<>(headers);
         try {
             restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
+            String uri =tenantName.equalsIgnoreCase("apple")?"http://apple.localhost:5173/oidc/redirect": redirectUri.replace("{realm}", tenantName);
             String redirectURI = String.format(Constants.TENANT_REDIRECT_URI,keycloakEndpoint ,tenantName,
-                    Constants.TENANT_CLIENT_ID, redirectUri.replace("{realm}",tenantName));
+                    Constants.TENANT_CLIENT_ID, uri);
 
             KCTenantInfoResponse response = KCTenantInfoResponse.builder()
                    // .id(tenant.getId())
@@ -459,7 +460,7 @@ public class KeycloakService {
         MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
         formParams.add("grant_type", "authorization_code");
         formParams.add("code", req.getAuthCode());
-        formParams.add("redirect_uri", redirectUri.replace("{realm}",realm));
+        formParams.add("redirect_uri",req.getTenantName().equalsIgnoreCase("apple")?"http://apple.localhost:5173/oidc/redirect" :redirectUri.replace("{realm}",realm));
         formParams.add("client_id", tenantKeyCloakConfig.getData().getClientId());
         formParams.add("client_secret", tenantKeyCloakConfig.getData().getClientSecret());
 
