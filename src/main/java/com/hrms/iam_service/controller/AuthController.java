@@ -50,7 +50,7 @@ public class AuthController {
         log.info("Logout request for tenant: [{}]", tenantId);
 
         try {
-           // tokenRefreshService.logout(request.getRefreshToken(), tenantId);
+            keycloakService.logoutUser(request.getRefreshToken(), tenantId);
             log.info("Logout successful for tenant: [{}]", tenantId);
             return ResponseEntity.noContent().build();
 

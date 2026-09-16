@@ -21,6 +21,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -531,8 +532,15 @@ public class KeycloakService {
 
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
 
-        ResponseEntity<String> kcResponse = restTemplate.postForEntity(logoutUrl, entity, String.class);
-        log.info("Keycloak logout response: {}", kcResponse.getStatusCode());
+        try {
+            ResponseEntity<String> kcResponse = restTemplate.postForEntity(logoutUrl, entity, String.class);
+            log.info("Keycloak logout response: {}", kcResponse.getStatusCode());
+        } catch (HttpClientErrorException.BadRequest e) {
+            // Keycloak returns 400/invalid_grant when the refresh token is already expired,
+            // revoked, or was already logged out - treat logout as idempotent in that case.
+            log.warn("Keycloak logout called with an already invalid refresh token for realm: [{}] - {}",
+                    realm, e.getResponseBodyAsString());
+        }
     }
 
     public void removeGroupAccess(String token, String realmName, String userId, String groupId) {
