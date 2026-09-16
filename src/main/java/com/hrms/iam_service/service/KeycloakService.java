@@ -98,6 +98,7 @@ public class KeycloakService {
     }
 
     public String createRealm(String token, String realmName) {
+        log.info("Creating realm: [{}]", realmName);
         validateNotNull(token, "token");
         validateNotNull(realmName, "realmName");
         //String url = keycloakBaseUrl + keycloakUrls.getRealms();
@@ -115,6 +116,7 @@ public class KeycloakService {
         try {
             // Call the Keycloak API
             ResponseEntity<String> response = restTemplate.exchange(keycloakEndpoint+REALM_URL, HttpMethod.POST, requestEntity, String.class);
+            log.info("Realm created successfully: [{}]", realmName);
             return response.getBody();
         } catch (Exception e) {
             throw new RuntimeException("Failed to create realm: " + realmName, e);
@@ -139,6 +141,7 @@ public class KeycloakService {
     }
 
     public KCCreateClientResponse createClient(String adminToken, String realm) {
+        log.info("Creating client for realm: [{}]", realm);
         validateNotNull(adminToken, "adminToken");
         validateNotNull(realm, "realmName");
 
@@ -167,6 +170,7 @@ public class KeycloakService {
             // Send POST request
             ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
             if (response.getStatusCode() == HttpStatus.CREATED) {
+                log.info("Client created successfully for realm: [{}]", realm);
                 return getClientDetails(adminToken, realm, response.getHeaders().get("location").get(0));
             } else {
                 throw new RuntimeException("Error in creating client");
@@ -211,6 +215,7 @@ public class KeycloakService {
 
     public  void createRoles(String token,String realmName,String[] roles) {
 
+        log.info("Creating [{}] roles for realm: [{}]", roles.length, realmName);
         for (String roleName : roles) {
             Map<String, Object> rolePayload = new HashMap<>();
             rolePayload.put("name", roleName);
@@ -225,15 +230,16 @@ public class KeycloakService {
                     url, HttpMethod.POST, requestEntity, String.class
             );
             if (response.getStatusCode().is2xxSuccessful()) {
-                System.out.println("Role created: " + roleName);
+                log.info("Role created: [{}]", roleName);
             } else {
-                System.out.println("Failed to create role: " + roleName + " - " + response.getBody());
+                log.info("Failed to create role: [{}] - {}", roleName, response.getBody());
             }
         }
     }
 
 
     public String createGroup(String token,String groupName, String realm) {
+        log.info("Creating group: [{}] in realm: [{}]", groupName, realm);
         validateNotNull(realm,"realm");
         validateNotNull(groupName,"groupName");
         String url = keycloakEndpoint+CREATE_GROUP.replace("{realm}", realm);
@@ -246,8 +252,9 @@ public class KeycloakService {
             // Send POST request
             ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
             if (response.getStatusCode() == HttpStatus.CREATED) {
-                System.out.println("hello");
-                return extractIdFromPath(Constants.EXTRACT_GROUP_ID_REGEX,(Objects.requireNonNull(response.getHeaders().get("location"))).get(0));
+                String groupId = extractIdFromPath(Constants.EXTRACT_GROUP_ID_REGEX,(Objects.requireNonNull(response.getHeaders().get("location"))).get(0));
+                log.info("Group created successfully: [{}] in realm: [{}]", groupId, realm);
+                return groupId;
             } else {
                 throw new RuntimeException("Error in creating client");
             }
@@ -270,24 +277,29 @@ public class KeycloakService {
     }
 
     public void assignRolesToGroup(String token, String groupId, List<String> roles, String realmName) {
+        log.info("Assigning roles: [{}] to group: [{}] in realm: [{}]", roles, groupId, realmName);
         String url = keycloakEndpoint+ASSIGN_GROUP_ROLES.replace("{realm}", realmName).replace("{groupId}",groupId);
         HttpHeaders headers = createHeaders(token);
         List<RealmRoleDetails> allRealmRoles = getAllRealmRoles(token, realmName).stream().filter(role->roles.contains(role.getName())).toList();
         HttpEntity<List<RealmRoleDetails>> requestEntity = new HttpEntity<>(allRealmRoles, headers);
         try {
             restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+            log.info("Roles assigned successfully to group: [{}]", groupId);
         }catch (Exception ex){
             throw new RuntimeException("Error fetching roles from realm in keycloak " );
         }
     }
 
     public List<RealmRoleDetails> getAllRealmRoles(String token, String realmName){
+        log.info("Fetching all realm roles for realm: [{}]", realmName);
         String url = keycloakEndpoint+GET_REALM_ROLES.replace("{realm}", realmName);
         HttpHeaders headers = createHeaders(token);
         HttpEntity<String> requestEntity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
         if (response.getStatusCode() == HttpStatus.OK) {
-            return parseRoles(response.getBody());
+            List<RealmRoleDetails> roles = parseRoles(response.getBody());
+            log.info("Fetched [{}] roles for realm: [{}]", roles.size(), realmName);
+            return roles;
         } else {
             throw new RuntimeException("Error fetching roles from realm in keycloak " );
         }
@@ -320,13 +332,16 @@ public class KeycloakService {
         log.info("Request log:{}",userRequest);
         ResponseEntity<Void> response = restTemplate.exchange(url, HttpMethod.POST, request, Void.class);
         if (response.getStatusCode() == HttpStatus.CREATED) {
-            return extractIdFromPath(Constants.EXTRACT_USER_ID_REGEX,response.getHeaders().getLocation().toString());
+            String userId = extractIdFromPath(Constants.EXTRACT_USER_ID_REGEX,response.getHeaders().getLocation().toString());
+            log.info("User created successfully: [{}] in realm: [{}]", userId, realmName);
+            return userId;
         } else {
             throw new RuntimeException("Failed to create user: " + response.getStatusCode() );
         }
     }
 
     public void grantSuperAdminAccess(String token, String realmName, String userId,String groupId) {
+        log.info("Granting super admin access to user: [{}] in realm: [{}]", userId, realmName);
         try {
             List<Map> clients = getClients(token, realmName);
 
@@ -356,6 +371,7 @@ public class KeycloakService {
 
                         assignClientRolesToUser(token, realmName, userId, clientId, roleAssignments);
                         assignUserToGroup(token, realmName, userId, groupId);
+                        log.info("Super admin access granted successfully to user: [{}]", userId);
                         return; // Successfully assigned roles
                     } else {
                         throw new RuntimeException("Required roles ('manage-users' ) not found for client.");
@@ -377,6 +393,7 @@ public class KeycloakService {
                 getClientsUrl, HttpMethod.GET, new HttpEntity<>(headers), Map[].class);
 
         if (clientsResponse.getStatusCode() == HttpStatus.OK) {
+            log.info("Fetched clients successfully for realm: [{}]", realmName);
             return Arrays.asList(clientsResponse.getBody());
         } else {
             throw new RuntimeException("Failed to fetch clients for realm: " + clientsResponse.getStatusCode());
@@ -396,6 +413,7 @@ public class KeycloakService {
         if (roleResponse.getStatusCode() != HttpStatus.NO_CONTENT) {
             throw new RuntimeException("Failed to assign roles to the user: " + roleResponse.getStatusCode());
         }
+        log.info("Client roles assigned successfully to user: [{}]", userId);
     }
     public List<Map<String, Object>> getClientRoles(String token, String realmName, String clientId) {
         String allClientRolesUrl = keycloakEndpoint+GET_CLIENT_ROLES.replace("{realm}", realmName)
@@ -413,12 +431,14 @@ public class KeycloakService {
     }
 
     public void assignUserToGroup(String token, String realm, String userId, String groupId) {
+        log.info("Assigning user: [{}] to group: [{}] in realm: [{}]", userId, groupId, realm);
         try {
             HttpHeaders headers = createHeaders(token);
             HttpEntity<String> request = new HttpEntity<>(headers);
             String assignGroupUrl = keycloakEndpoint+ASSIGN_GROUP_TO_USER.replace("{realm}", realm)
                                 .replace("{userId}", userId).replace("{groupId}", groupId);
             restTemplate.exchange(assignGroupUrl, HttpMethod.PUT, request, Void.class);
+            log.info("User assigned to group successfully: [{}]", userId);
         } catch (Exception e) {
             throw new RuntimeException("Error while assigning user to group: " + e.getMessage(), e);
         }
@@ -426,6 +446,7 @@ public class KeycloakService {
 
 
     public KCTenantInfoResponse validateTenant(String token, @NotBlank String tenantName) {
+        log.info("Validating tenant: [{}]", tenantName);
         HttpHeaders headers = createHeaders(token);
         String url = keycloakEndpoint+VALIDATE_REALM.replace("{realm}", tenantName);
         HttpEntity<String> requestEntity = new HttpEntity<>(headers);
@@ -440,6 +461,7 @@ public class KeycloakService {
                     .realm(tenantName)
                     .redirectURI(redirectURI)
                     .build();
+            log.info("Tenant validated successfully: [{}]", tenantName);
             return response;
         }
         catch(Exception e){
@@ -514,18 +536,21 @@ public class KeycloakService {
     }
 
     public void removeGroupAccess(String token, String realmName, String userId, String groupId) {
+        log.info("Removing group access for user: [{}], group: [{}], realm: [{}]", userId, groupId, realmName);
         try {
             HttpHeaders headers = createHeaders(token);
             HttpEntity<String> request = new HttpEntity<>(headers);
             String removeGroupUrl = keycloakEndpoint+UNASSIGN_GROUP_FROM_USER.replace("{realm}", realmName)
                     .replace("{userId}", userId).replace("{groupId}", groupId);
             restTemplate.exchange(removeGroupUrl, HttpMethod.DELETE, request, Void.class);
+            log.info("Group access removed successfully for user: [{}]", userId);
         } catch (Exception e) {
             throw new RuntimeException("Error while removing user from group: " + e.getMessage(), e);
         }
     }
 
     public void removeRolesFromGroup(String token, String groupId, List<String> roles, String realmName) {
+        log.info("Removing roles: [{}] from group: [{}] in realm: [{}]", roles, groupId, realmName);
         String url = keycloakEndpoint+ASSIGN_GROUP_ROLES.replace("{realm}", realmName).replace("{groupId}",groupId);
         HttpHeaders headers = createHeaders(token);
         List<RealmRoleDetails> allRealmRoles =
@@ -535,6 +560,7 @@ public class KeycloakService {
         HttpEntity<List<RealmRoleDetails>> requestEntity = new HttpEntity<>(allRealmRoles, headers);
         try {
             restTemplate.exchange(url, HttpMethod.DELETE, requestEntity, String.class);
+            log.info("Roles removed successfully from group: [{}]", groupId);
         }catch (Exception ex){
             throw new RuntimeException("Error fetching roles from realm in keycloak " );
         }
@@ -542,6 +568,7 @@ public class KeycloakService {
 
     public TokenResponse refreshToken(String refreshToken, String tenantId) {
 
+        log.info("Refreshing token for tenant: [{}]", tenantId);
         KeycloakConfigResponse tenantKeyCloakConfig = getTenantKeyCloakConfig(tenantId);
 
         HttpHeaders headers = new HttpHeaders();
@@ -564,6 +591,7 @@ public class KeycloakService {
             );
 
             if (response.getStatusCode() == HttpStatus.OK) {
+                log.info("Token refreshed successfully for tenant: [{}]", tenantId);
                 return response.getBody();
             } else {
                 throw new RuntimeException("Failed to refresh token. Status: " + response.getStatusCode());
@@ -574,6 +602,7 @@ public class KeycloakService {
     }
 
     public void updateGroupName(String token, String groupId, String newGroupName, String realmName) {
+        log.info("Updating group: [{}] to new name: [{}] in realm: [{}]", groupId, newGroupName, realmName);
         String url = keycloakEndpoint+CREATE_GROUP.replace("{realm}", realmName)+"/"+groupId;
 
         Map<String, Object> groupReq = new HashMap<>();
@@ -583,6 +612,7 @@ public class KeycloakService {
         try {
             // Send PUT request
             restTemplate.put(url, request);
+            log.info("Group name updated successfully for group: [{}]", groupId);
         } catch (Exception e) {
             throw new RuntimeException("Error updating group in Keycloak: " + e.getMessage(), e);
         }
