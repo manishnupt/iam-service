@@ -24,7 +24,7 @@ public class AuthController {
     private KeycloakService keycloakService;
 
 
-    @PostMapping("/refresh")
+    @PostMapping("/refresh-token")
     public ResponseEntity<TokenResponse> refreshToken(
             @Valid @RequestBody TokenRequest request
                     ,@RequestHeader("X-Tenant-Id") String tenantId) {
