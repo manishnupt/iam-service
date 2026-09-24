@@ -250,23 +250,6 @@ public class IamController {
         }
     }
 
-
-    @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(@RequestParam String token,
-                                                      HttpServletRequest request) {
-        String realm = request.getHeader("X-Tenant-Id");
-        log.info("Logout request received for realm: [{}]", realm);
-        keyCloakService.logoutUser(token, realm);
-        String redirectUri = "https://demo.pp.hrms.work/tenant-login";
-
-        Map<String, String> body = new HashMap<>();
-        body.put("redirectUri",redirectUri);
-        body.put("message", "Logged out successfully");
-
-        log.info("Logout successful for realm: [{}]", realm);
-        return ResponseEntity.ok(body);
-    }
-
     @DeleteMapping("/remove-group-access")
     public ResponseEntity<?> removeGroupAccess(@RequestHeader("Authorization") String token,
                                               @RequestParam(required = true) String realmName,
